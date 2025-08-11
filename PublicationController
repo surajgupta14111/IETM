@@ -1,0 +1,165 @@
+-----------Controller---------
+--------ControllerName-------PublicationController-------
+
+using IETM.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+namespace PaymentCard.API.Controllers
+{
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class PublicationController : ControllerBase
+    {
+        private readonly AppDbContext _context;
+
+        public PublicationController(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+       public async Task<IActionResult> GetAllPublications()
+    {
+        try
+        {
+            var data = await _context.Publication.ToListAsync();
+            return Ok(data);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PublicationModule>> GetById(int id)
+        {
+            var item = await _context.Publication.FindAsync(id);
+            if (item == null)
+                return NotFound();
+
+            return item;
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<PublicationModule>> Create (PublicationModule publicationModule)
+        {
+            ArgumentNullException.ThrowIfNull(publicationModule);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (_context.Publication == null)
+                {
+                    return Problem("Model Is null");
+                }
+                 _context.Publication.Add(publicationModule);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetById), new { id = publicationModule.Id }, publicationModule);
+            }
+            catch (Exception ex)
+            {
+                return CreatedAtAction(nameof(GetById), new { id = publicationModule.Id }, publicationModule);
+            }
+        }
+     
+            [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] PublicationModule  publicationModule)
+        {
+            if (id != publicationModule.Id)
+                return BadRequest();
+
+            _context.Entry(publicationModule).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ItemExists(id))
+                    return NotFound();
+                else
+                    throw;
+            }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var item = await _context.Publication.FindAsync(id);
+            if (item == null)
+                return NotFound();
+
+            _context.Publication.Remove(item);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool ItemExists(int id)
+        {
+            return _context.Publication.Any(e => e.Id == id);
+        }
+    }
+}
+
+---------Model-----
+---------ModelName-----------
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace IETM.Models
+{
+    [Table("PublicationModules")]
+    public class PublicationModule
+    {
+        public int Id { get; set; }
+
+        // 🔒 Inherited
+        public string? ModelIdentificationCode { get; set; }
+        public string? LanguageCode { get; set; }
+        public string? CountryCode { get; set; }
+        public string? SecurityClassification { get; set; }
+        public string? ResponsibleOrganization { get; set; }
+        public string? BREXReference { get; set; }
+
+        // ✅ Required
+        [Required]
+        public required string PMIssuer { get; set; }
+
+        [Required]
+        public required  string PMNumber { get; set; }
+
+        [Required]
+        public required string PMVolume { get; set; }
+        [Required]
+        public required string PMTitleLong { get; set; }
+
+        [Required]
+        public required string PMTitleShort { get; set; }
+
+        [Required]
+        public required string IssueNumber { get; set; }
+
+        [Required]
+        public required string InWorkNumber { get; set; }
+
+        [Required]
+        public required DateTime IssueDate { get; set; }
+
+        [Required]
+        public required string DataRestrictions { get; set; }
+
+        [Required]
+        public required string ContentStructure { get; set; }
+    }
+}
+
+
