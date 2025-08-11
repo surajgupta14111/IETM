@@ -1,0 +1,179 @@
+---------Controller------
+---------Controller Name------ProjCreationsController ------------
+
+using IETM.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+namespace PaymentCard.API.Controllers;
+[Route("api/[controller]/[action]")]
+[ApiController]
+public class ProjCreationsController : ControllerBase
+{
+    private readonly AppDbContext _context;
+   public ProjCreationsController(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    // GET: api/ITEMFields
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ProjectCreation>>> GetProjectCreation()
+    {
+        if (_context.ProjectCreation == null)
+        {
+            return NotFound();
+        }
+      
+        return await _context.ProjectCreation.ToListAsync();
+    }
+
+    // GET: api/ITEMFields/5
+    [HttpGet("{id}")]
+
+    public async Task<ActionResult<ProjectCreation>> GetProjectCreation(int id, ActionResult<ProjectCreation> ProjectCreation)
+    {
+        try
+        {
+            if (_context.ProjectCreation == null)
+                return NotFound("ProjectCreation table not found.");
+
+            var itemField = await _context.ProjectCreation.FindAsync(id);
+
+            if (itemField == null)
+                return NotFound($"No record found with ID = {id}");
+
+            return Ok(itemField);
+        }
+        catch (Exception ex)
+        {
+            return CreatedAtAction(nameof(GetProjectCreation), new { id = ProjectCreation }, ProjectCreation);
+        }
+    }
+    // POST: api/ITEMFields
+    [HttpPost]
+    public async Task<ActionResult<ProjectCreation>> PostProjectCreation (ProjectCreation ProjectCreation)
+    {
+        try
+        { 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (_context.ProjectCreation == null)
+            {
+                return Problem("Entity set 'AppDbContext.ProjectCreation' is null.");
+            }
+
+            _context.ProjectCreation.Add(ProjectCreation);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetProjectCreation), new { id = ProjectCreation.Id }, ProjectCreation);
+
+    }
+    catch (Exception ex)
+            {
+            return CreatedAtAction(nameof(GetProjectCreation), new { id = ProjectCreation.Id }, ProjectCreation);
+        }
+    }
+       
+  // PUT: api/ITEMFields/5
+        [HttpPut("{id}")]
+
+        public async Task<IActionResult> PutProjectCreation (int id, ProjectCreation projectCreation)
+        {
+            if (id != projectCreation.Id)
+        {
+            return BadRequest();
+        }
+
+        _context.Entry(projectCreation).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ProjectCreationExists(id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return NoContent();
+    }
+
+    // DELETE: api/ITEMFields/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProjectCreation(int id)
+    {
+        if (_context.ProjectCreation == null)
+        {
+            return NotFound();
+        }
+        var ProjectCreations = await _context.ProjectCreation.FindAsync(id);
+        if (ProjectCreations == null)
+        {
+            return NotFound();
+        }
+
+    _context.ProjectCreation.Remove(ProjectCreations);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+        
+    }
+
+    private bool ProjectCreationExists(int id)
+    {
+        return (_context.ProjectCreation?.Any(e => e.Id == id)).GetValueOrDefault();
+    }
+}
+
+-----------Model---------
+--------ModelName------ProjectCreation--------
+
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace IETM.Models
+{
+    [Table("ProjectCreation", Schema = "dbo")]
+    public class ProjectCreation
+    {
+        [Key]
+        public int Id { get; set; }  // Primary key for EF table
+
+        [Required(ErrorMessage = "Project Name is required.")]
+        public required string ProjectName { get; set; }
+
+        [Required(ErrorMessage = "Model Identification Code is required.")]
+        public required string ModelIdentificationCode { get; set; }
+
+        [Required(ErrorMessage = "Customer/Authority is required.")]
+        public required string CustomerAuthority { get; set; }
+
+        [Required(ErrorMessage = "S1000D Issue Version is required.")]
+        public required string S1000DIssueVersion { get; set; }
+
+        [Required(ErrorMessage = "Language Code is required.")]
+        public required string LanguageCode { get; set; }
+
+        [Required(ErrorMessage = "Country Code is required.")]
+        public required string CountryCode { get; set; }
+
+        [Required(ErrorMessage = "Security Classification is required.")]
+        public required string SecurityClassification { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Responsible Organization is required.")]
+        public string ResponsibleOrganization { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "BREX Reference (DMC) is required.")]
+        public required string BrexReferenceDmc { get; set; }
+    }
+}
