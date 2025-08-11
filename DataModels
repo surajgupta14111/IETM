@@ -1,0 +1,260 @@
+---------Controller----
+------ControllerName------DataModelsController----
+using IETM.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+
+namespace PaymentCard.API.Controllers;
+
+[Route("api/[controller]/[action]")]
+[ApiController]
+public class DataModelsController : ControllerBase
+{
+    private readonly AppDbContext _context;
+
+    public DataModelsController(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    // GET: api/ITEMFields
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<DataModel>>> GetDataModel()
+    {
+        try
+        {
+            if (_context.DataModel == null)
+            {
+                return NotFound();
+            }
+            var obj = await _context.DataModel.ToListAsync();
+            
+            return CreatedAtAction(nameof(GetDataModel), obj);
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+        return CreatedAtAction(nameof(GetDataModel),null);
+
+    }
+
+    // GET: api/ITEMFields/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<DataModel>> GetDataModelById(int id)
+    {
+        if (_context.DataModel == null)
+        {
+            return NotFound();
+        }
+
+        var DataModel= await _context.DataModel.FindAsync(id);
+
+        if (DataModel == null)
+        {
+            return NotFound();
+        }
+
+        return DataModel;
+    }
+
+    // POST: api/ITEMFields
+    [HttpPost]
+    public async Task<ActionResult<DataModel>> PostDataModel(DataModel model)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (_context.DataModel == null)
+            {
+                return Problem("Model Is null");
+            }
+
+            _context.DataModel.Add(model);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetDataModel), new { id = model.Id }, model);
+        }
+        catch(Exception ex)
+        {
+            return CreatedAtAction(nameof(GetDataModel), new { id = model.Id }, model);
+        }
+    }
+    [HttpPost]
+
+    // PUT: api/ITEMFields/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutDataModel(int id, DataModel DataModel)
+    {
+        if (id != DataModel.Id)
+        {
+            return BadRequest();
+        }
+
+        _context.Entry(DataModel).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ITEMFieldExists(id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return NoContent();
+    }
+
+    // DELETE: api/ITEMFields/5
+    [HttpPost]
+    public async Task<IActionResult> DeleteIDataModel(int id )
+    {
+        if (_context.DataModel == null)
+        {
+            return NotFound();
+        }
+        var itemField = await _context.DataModel.FindAsync(id);
+        if (itemField == null)
+        {
+            return NotFound();
+        }
+
+        _context.DataModel.Remove(itemField);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private bool ITEMFieldExists(int id)
+    {
+        return (_context.DataModel?.Any(e => e.Id == id)).GetValueOrDefault();
+    }
+}
+
+--------Model-----
+------ModelName------DataModel-------
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace IETM.Models
+{
+    
+    public class DataModel
+    {
+       
+        [Key]
+        public int Id { get; set; }
+
+        public string? ModelIdentificationCode { get; set; }
+
+        public string? SystemDifferenceCode { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        public string SystemCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string SubSystemCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string AssemblyCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string DisassemblyCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string DisassemblyCodeVariant { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string InfoCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string InfoCodeVariant { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string ItemLocationCode { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string DMTitleLong { get; set; } = string.Empty;
+
+        [MaxLength(255)]
+        public string? DMTitleShort { get; set; }
+
+        [MaxLength(50)]
+        public string? LanguageCode { get; set; }
+
+        [MaxLength(50)]
+        public string? CountryCode { get; set; }
+
+        [MaxLength(50)]
+        public string? SecurityClassification { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        public string IssueNumber { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string InWorkNumber { get; set; } = string.Empty;
+
+        [Required]
+        public DateTime IssueDate { get; set; }
+    }
+}
+
+-------------appsettings.json------
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=DESKTOP-2DPPADI;Database=IETMDb;Integrated Security=True;TrustServerCertificate=True;"
+  }
+}
+
+------------AppDbContext--------
+
+using IETM.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace IETM.Models
+{
+    public class AppDbContext:DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
+        public DbSet<ProjectCreation> ProjectCreation { get; set; } 
+        public DbSet<DataModel> DataModel { get; set; }
+       
+        public DbSet<PublicationModule> Publication { get; set; } = null!;
+    }
+}
+
+
